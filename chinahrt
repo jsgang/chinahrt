@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         chinahrt全自动刷课
 // @namespace    https://github.com/jsgang/chinahrt
-// @version      1.0
-// @description  chinahrt自动刷课，只需将视频添加到播放列表，后续刷课由系统自动完成；基于https://github.com/yikuaibaiban/chinahrt修改。
+// @version      1.4
+// @description  chinahrt自动刷课，功能可自由配置，只需将视频添加到播放列表，后续刷课由系统自动完成；基于https://github.com/yikuaibaiban/chinahrt修改。
 // @author       jsgang  yikuaibaiban  https://www.jsgang.top
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=jsgang.top
 // @match        http://*.chinahrt.com/*
@@ -618,7 +618,7 @@ window.onload = function () {
 
             // 增加提示信息
             $('<div></div>', {
-                html: "点击课程详情页中的插件提供的【添加到播放列表】按钮添加需要自动播放的课程。受到浏览器策略影响第一次可能无法自动播放，请手动点击播放。",
+                html: "点课程详情页中的【添加到播放列表】按钮添加需要学习的课程。受到浏览器策略影响第一次可能无法自动播放，请手动点击播放。视频播放标签放置最前面",
                 css: {
                     "font-size": "14px",
                     "font-weight": "bold",
@@ -664,13 +664,15 @@ window.onload = function () {
 
             // 视频总长度
             var videoDuration = 0;
+            var videocurrentTime=0;
             var startstaus=0;
             var actisok=0;
             var ctimes=0;
             var rtimes=0;
-             var rtimess=0;
+            var rtimess=0;
             var jumpas=0;
             var nonum=0;
+            var nplay=0;
 
              var tmp = setInterval(function () {
                 if (player != undefined) {
@@ -693,34 +695,47 @@ window.onload = function () {
                         } else {
                             GM_setValue(REAPT_MODE, 0);
                             GM_setValue(REAPT_NUM, 0);
-                            if(getReaptNum()==0){
+                           
                             showNotification("即将播放下一个视频:" + courses[0].title);
                             window.top.location.href = courses[0].url;
-                            }
+                         
                         }
                     });
 
 
                     player.addListener('time', function (t) {
                         videoDuration = parseInt(player.getMetaDate().duration);
-                      var tmpurl=$(location).attr("href");
-
-                        if(tmpurl.indexOf("ifDrag=0")==-1){
-
-                            if(ctimes==0){
-                                player.videoSeek(videoDuration-4);
-                                ctimes=1;
+                        videocurrentTime = parseInt(attrset.currentTime);
+                        
+                        
+                        if(nplay==0){
+                             if((videocurrentTime-ctimes)>33){
+                             ctimes=videocurrentTime;
+                             }
+                            if((videocurrentTime-ctimes)>30){
+                                if((videoDuration-videocurrentTime)>57){
+                            ctimes=videocurrentTime;
+                                player.videoSeek(videocurrentTime+27);
+                                rtimes=rtimes+1;
+                                //console.log(rtimes);
+                                nplay=1;}
                             }
-
-
                         }else{
-                            tmpurl=tmpurl.replace("ifPauseAd=1&ifPauseBlur=1","ifPauseAd=0&ifPauseBlur=0");
-                            tmpurl=tmpurl.replace("ifDrag=0","ifDrag=1");
-                        if(attrset.currentTime>3){
-      self.location.href=tmpurl;
+                           
+                        if((videocurrentTime-ctimes)>30){
+                            if(rtimes==4){
+                                var tmpurl=$(location).attr("href");
 
+                                self.location.href=tmpurl;
+
+                            }
+                            
+                            ctimes=videocurrentTime;
+                                nplay=0;
+                            }
                         }
-                        }
+                    
+                      // console.log(attrset.currentTime+"/"+videoDuration);
 
                     });
                 }
